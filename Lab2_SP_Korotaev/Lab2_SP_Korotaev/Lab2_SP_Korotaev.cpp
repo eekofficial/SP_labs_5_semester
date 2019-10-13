@@ -44,6 +44,17 @@ void square_of_number(int& number) {
 	number = number * number;
 }
 
+void GetWindowPos(HWND hWnd, int* x, int* y)
+{
+	HWND hWndParent = GetParent(hWnd);
+	POINT p = { 0 };
+
+	MapWindowPoints(hWnd, hWndParent, &p, 1);
+
+	(*x) = p.x;
+	(*y) = p.y;
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -58,6 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_LAB2SPKOROTAEV, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
+
 
     // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
@@ -244,7 +256,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		memset(STRR, 0, sizeof STRR);
 		_tcscat_s(STRR, TEXT("WM_LBUTTONDOWN\n"));
 		POINT pt;
-		GetCursorPos(&pt);
+		pt.x = LOWORD(lParam);
+		pt.y = HIWORD(lParam);
+		ClientToScreen(hWnd, &pt);
 		GetWindowRect(hWnd, &rect);
 		rect.left = pt.x - rect.left;
 		rect.top = pt.y - rect.top;
@@ -268,7 +282,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			SetCapture(hWnd);
 			POINT pt;
-			GetCursorPos(&pt);
+			pt.x = LOWORD(lParam);
+			pt.y = HIWORD(lParam);
+			ClientToScreen(hWnd, &pt);
 			SetWindowPos(hWnd, HWND_TOP, pt.x - rect.left, pt.y - rect.top, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
 		}
 		default:
