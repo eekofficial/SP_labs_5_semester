@@ -19,9 +19,8 @@ HWND hButton3;
 HWND hButton4;
 HWND hButton5;
 HWND hButton6;
-HWND hButton7;
-HWND hButton8;
 HWND hButton9;
+BOOL FL = false;
 
 INT WINDOW_COUNT = 0;
 INT CHILD_WINDOW_COUNT = 0;
@@ -32,8 +31,6 @@ const INT id_button3 = 152;
 const INT id_button4 = 153;
 const INT id_button5 = 154;
 const INT id_button6 = 155;
-const INT id_button7 = 156;
-const INT id_button8 = 157;
 const INT id_button9 = 158;
 
 
@@ -42,12 +39,6 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-
-INT RangedRandDemo(int range_min, int range_max)
-{
-	int u = (double)rand() / (RAND_MAX + 1) * (range_max - range_min) + range_min;
-	return INT(u);
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -137,10 +128,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hButton4 = CreateWindow(TEXT("button"), TEXT("Пронумеровать все окна"), WS_CHILD | WS_VISIBLE, 400, 100, 200, 100, hWnd, HMENU(id_button4), hInstance, 0);
    hButton5 = CreateWindow(TEXT("button"), TEXT("Нажать Button3 в APP_1"), WS_CHILD | WS_VISIBLE, 400, 300, 200, 100, hWnd, HMENU(id_button5), hInstance, 0);
    hButton6 = CreateWindow(TEXT("button"), TEXT("Нажать пункт меню в APP_1"), WS_CHILD | WS_VISIBLE, 400, 500, 200, 100, hWnd, HMENU(id_button6), hInstance, 0);
-   hButton7 = CreateWindow(TEXT("button"), TEXT("Правая кнопка мыши APP_1"), WS_CHILD | WS_VISIBLE, 700, 100, 200, 100, hWnd, HMENU(id_button7), hInstance, 0);
-   hButton8 = CreateWindow(TEXT("button"), TEXT("Переместить окно APP_1"), WS_CHILD | WS_VISIBLE, 700, 300, 200, 100, hWnd, HMENU(id_button8), hInstance, 0);
-   hButton9 = CreateWindow(TEXT("button"), TEXT("Переименовать доч. окна"), WS_CHILD | WS_VISIBLE, 700, 500, 200, 100, hWnd, HMENU(id_button9), hInstance, 0);
-   
+   hButton9 = CreateWindow(TEXT("button"), TEXT("Переименовать доч. окна"), WS_CHILD | WS_VISIBLE, 700, 100, 200, 100, hWnd, HMENU(id_button9), hInstance, 0);
+  
 
    if (!hWnd)
    {
@@ -257,39 +246,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			break;
-			case id_button7:
-			{
-				HWND hWnd1 = FindWindow(0, APP_1);
-				if (hWnd1 != 0) {
-					RECT rt;
-					GetWindowRect(hWnd1, &rt);
-					INT length = rt.right - rt.left;
-					INT width = rt.bottom - rt.top;
-					INT x = RangedRandDemo(0, length);
-					INT y = RangedRandDemo(0, width);
-					SendMessage(hWnd1, WM_RBUTTONDOWN, 0, MAKELPARAM(x, y));
-					SendMessage(hWnd1, WM_RBUTTONUP, 0, 0);
-				}
-			}
-			break;
-			case id_button8:
-			{
-				HWND hWnd1 = FindWindow(0, APP_1);
-				if (hWnd1 != 0) {
-					RECT rt;
-					GetWindowRect(hWnd1, &rt);
-					POINT pt;
-					pt.x = rt.right - rt.left;
-					pt.y = rt.bottom - rt.top;
-					INT x = RangedRandDemo(0, pt.x);
-					INT y = RangedRandDemo(0, pt.y);
-					INT x2 = RangedRandDemo(0, pt.x);
-					INT y2 = RangedRandDemo(0, pt.y);
-					SendMessage(hWnd1, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(x, y));
-					SendMessage(hWnd1, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(x+10, y+10));
-				}
-			}
-				break;
 			case id_button9:
 			{
 				HWND hWnd1 = FindWindow(0, APP_1);
@@ -297,12 +253,47 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					EnumChildWindows(hWnd1, &EnumCS, 0);
 				}
 			}
-				break;
+			break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
         }
         break;
+	case WM_MOUSEMOVE:
+	{
+		int wmId = LOWORD(wParam);
+		switch (wmId) {
+		case MK_LBUTTON:
+		{
+			SetCapture(hWnd);
+			HWND hWnd1 = FindWindow(0, APP_1);
+			SendMessage(hWnd1, WM_MOUSEMOVE, wParam, lParam);
+			SendMessage(hWnd1, WM_LBUTTONDOWN, wParam, lParam);
+		}
+		break;
+		default:
+			ReleaseCapture();
+			break;
+		}
+	}
+	break;
+	case WM_LBUTTONDOWN:
+	{
+		HWND hWnd1 = FindWindow(0, APP_1);
+		if (hWnd1 != 0) {
+			SetCapture(hWnd);
+			SendMessage(hWnd1, WM_LBUTTONDOWN, wParam, lParam);
+		}
+	}
+	break;
+	case WM_RBUTTONDOWN:
+	{
+		HWND hWnd1 = FindWindow(0, APP_1);
+		if (hWnd1 != 0) {
+			SendMessage(hWnd1, WM_RBUTTONDOWN, wParam, lParam);
+		}
+	}
+	break;
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
